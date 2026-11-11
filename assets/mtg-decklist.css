@@ -1,0 +1,20 @@
+/* MTG Decklist: colours and fonts come from the theme */
+.mtg-decklist { margin: 1.5em 0; }
+.mtg-decklist h3, .mtg-decklist h4 { margin: 1em 0 .4em; }
+.mtg-decklist-total { font-weight: normal; opacity: .7; }
+.mtg-decklist-cards { list-style: none; margin: 0; padding: 0; }
+.mtg-decklist-cards li { display: flex; gap: .4em; align-items: baseline; margin: 0; padding: .15em 0; break-inside: avoid; }
+.mtg-decklist-qty { min-width: 1.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.mtg-decklist-cost { margin-left: auto; white-space: nowrap; }
+.mtg-decklist-cost .ms-cost { margin-left: .1em; font-size: .8em; }
+.mtg-decklist-groups { columns: 15em; column-gap: 2em; }
+.mtg-decklist-group { break-inside: avoid; padding-bottom: .8em; }
+.mtg-decklist-group h4 { margin-top: 0; }
+.mtg-decklist-copy { display: block; margin: 0 0 0 auto; font: inherit; font-size: .9em; cursor: pointer; }
+.mtg-decklist-curve { margin: 1.2em 0 0; }
+.mtg-decklist-curve figcaption { font-weight: bold; margin-bottom: .4em; }
+.mtg-decklist-bars { display: flex; align-items: flex-end; gap: .4em; height: 7em; max-width: 24em; }
+.mtg-decklist-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; text-align: center; font-size: .85em; }
+.mtg-decklist-n { order: 0; }
+.mtg-decklist-bar::before { content: ""; order: 1; height: calc(var(--h) * (100% - 2.6em)); min-height: 1px; background: currentColor; opacity: .55; border-radius: 2px 2px 0 0; }
+.mtg-decklist-v { order: 2; border-top: 1px solid; padding-top: .15em; }

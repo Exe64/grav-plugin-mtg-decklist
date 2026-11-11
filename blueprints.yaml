@@ -1,0 +1,47 @@
+name: MTG Decklist
+slug: mtg-decklist
+type: plugin
+version: 1.0.0
+description: |
+  Magic: The Gathering deck lists from an Arena or MTGO export, grouped by card type with mana costs and the mana curve. Each card shows its image on hover through Scryfall Tooltip.
+
+  ```
+  [mtgdeck]
+  Deck
+  4 Lightning Bolt (M10) 146
+  20 Mountain
+
+  Sideboard
+  2 Duress
+  [/mtgdeck]
+  ```
+icon: list
+author:
+  name: Julien Dumur
+  url: https://github.com/Exe64
+license: MIT
+homepage: https://github.com/Exe64/grav-plugin-mtg-decklist
+demo: https://magicthegathering.fr
+docs: https://github.com/Exe64/grav-plugin-mtg-decklist/blob/main/README.md
+bugs: https://github.com/Exe64/grav-plugin-mtg-decklist/issues
+keywords: [magic, mtg, decklist, deck, arena, mtgo, scryfall, shortcode]
+compatibility:
+  grav: ['2.0']
+dependencies:
+  - { name: grav, version: '>=2.2.0' }
+  - { name: shortcode-core, version: '>=5.0.0' }
+  - { name: scryfall-tooltip, version: '>=2.0.0' }
+
+form:
+  validation: loose
+  fields:
+    enabled:
+      type: toggle
+      label: PLUGIN_ADMIN.PLUGIN_STATUS
+      highlight: 1
+      default: 1
+      options:
+        1: PLUGIN_ADMIN.ENABLED
+        0: PLUGIN_ADMIN.DISABLED
+      validate:
+        type: bool
