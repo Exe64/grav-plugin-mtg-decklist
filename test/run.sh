@@ -40,7 +40,7 @@ get /home >/dev/null
 has '<section class="mtg-decklist-section" data-section="main"><h3>Deck <span class="mtg-decklist-total">(40)</span></h3>' && ok "Arena: main deck and its total" || ko "main section: $(grep -o '<section[^>]*data-section="main"><h3>[^/]*' "$W/page.html")"
 has 'data-section="sideboard"><h3>Sideboard <span class="mtg-decklist-total">(3)</span>' && ok "Arena: sideboard and its total" || ko "sideboard section"
 [[ $(count '<li data-name=') == 10 ]] && ok "10 card lines, About block left out" || ko "card lines: $(count '<li data-name=')"
-has '<li data-name="Lightning Bolt" data-qty="4"><span class="mtg-decklist-qty">4</span> <a class="scryfall-card" href="https://scryfall.com/search?q=%21%22Lightning%20Bolt%22%20set%3Am10%20cn%3A146" data-card="Lightning Bolt" data-img="https://api.scryfall.com/cards/m10/146?format=image&amp;version=normal">Lightning Bolt</a></li>' && ok "card line: quantity and [scryfall] link with set and number" || ko "card line: $(grep -o '<li data-name="Lightning Bolt"[^/]*' "$W/page.html")"
+has '<li data-name="Lightning Bolt" data-qty="4" data-set="M10" data-number="146"><span class="mtg-decklist-qty">4</span> <a class="scryfall-card" href="https://scryfall.com/search?q=%21%22Lightning%20Bolt%22%20set%3Am10%20cn%3A146" data-card="Lightning Bolt" data-img="https://api.scryfall.com/cards/m10/146?format=image&amp;version=normal">Lightning Bolt</a></li>' && ok "card line: quantity and [scryfall] link with set and number" || ko "card line: $(grep -o '<li data-name="Lightning Bolt"[^/]*' "$W/page.html")"
 has 'data-card="Monastery Swiftspear" data-img="https://api.scryfall.com/cards/named?format=image&amp;version=normal&amp;fuzzy=Monastery%20Swiftspear"' && ok "card without set: image by name" || ko "name only"
 has '<li data-name="Gut Shot" data-qty="1">' && ok "foil marker *F* removed" || ko "foil marker"
 has 'data-name="Fire // Ice"' && has 'data-name="Foudre"' && ok "split card and French name kept" || ko "split / French"
@@ -50,6 +50,13 @@ has 'Name Burn' && ko "About block shown" || ok "About block not shown"
 has 'mtg-decklist.js' && has 'mtg-decklist.css' && has 'mtg-decklist/assets/mana.css' && has 'scryfall-tooltip.js' && ok "assets of both plugins on a page with a deck" || ko "assets missing"
 get /home >/dev/null
 has 'mtg-decklist.js' && has 'scryfall-tooltip.js' && ok "assets on the cached page too" || ko "assets missing from cache"
+
+get /commander >/dev/null
+has 'data-section="commander"><h3>Commander <span class="mtg-decklist-total">(1)</span></h3><ul class="mtg-decklist-cards"><li data-name="Animar, Soul of Elements"' && ok "commander= moves that card to the Commander section" || ko "commander=: $(grep -o 'data-section="[a-z]*"><h3>[^/]*' "$W/page.html" | tr '\n' ' ')"
+has 'data-section="main"><h3>Deck <span class="mtg-decklist-total">(4)</span>' && ok "commander= : main deck without it" || ko "main deck with commander="
+has '<li data-name="Etali, Primal Conqueror // Etali, Primal Sickness" data-qty="1" data-set="MOM" data-number="298">' && ok "Front / Back written Front // Back, printing on the line" || ko "double-faced: $(grep -o '<li data-name="Etali[^>]*' "$W/page.html")"
+has '<li data-name="Forest" data-qty="1">' && ok "no printing data without set and number" || ko "Forest line"
+hasz $'Commander\n1 Animar, Soul of Elements (CMD) 181\n\nDeck\n1 Etali' && ok "data-list: commander first" || ko "data-list with commander="
 
 get /mtgo >/dev/null
 has 'data-section="main"><h3>Deck <span class="mtg-decklist-total">(9)</span>' && ok "MTGO: main deck, 4x accepted" || ko "MTGO main: $(grep -o 'data-section="main"><h3>[^/]*' "$W/page.html")"

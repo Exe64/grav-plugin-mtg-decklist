@@ -36,27 +36,46 @@
 
   // Scryfall knows a split card by its first half ("Fire", not "Fire // Ice") and a double-faced one by its front face
   var key = function (name) { return name.split(' // ')[0].trim().toLowerCase(); };
-  var names = {};
-  document.querySelectorAll('.mtg-decklist li[data-name]').forEach(function (li) { names[key(li.dataset.name)] = li.dataset.name.split(' // ')[0].trim(); });
-  var list = Object.keys(names);
-  var found = {};
+  // A printing from the export (set and number) is asked as such: it finds flavor names ("Mechagodzilla, Battle Fortress")
+  var pkey = function (set, number) { return 'p:' + set.toLowerCase() + '/' + number.toLowerCase(); };
+  var lis = [].slice.call(document.querySelectorAll('.mtg-decklist li[data-name]'));
+  var found = {}, asked = {}, got = false;
+  var lookup = function (li) {
+    return (li.dataset.set && found[pkey(li.dataset.set, li.dataset.number)]) || found[key(li.dataset.name)];
+  };
+  // Identifiers of the cards still unknown: their printing first, their name next (an Arena set code Scryfall lacks)
+  function ids(byPrinting) {
+    var out = {};
+    lis.forEach(function (li) {
+      if (lookup(li)) return;
+      var p = byPrinting && li.dataset.set && pkey(li.dataset.set, li.dataset.number), k = p || key(li.dataset.name);
+      if (asked[k]) return;
+      out[k] = p ? { set: li.dataset.set.toLowerCase(), collector_number: li.dataset.number } : { name: li.dataset.name.split(' // ')[0].trim() };
+    });
+    return Object.keys(out).map(function (k) { asked[k] = true; return out[k]; });
+  }
   // Up to 75 identifiers per request, one request after another (Scryfall asks for 50 to 100 ms between them)
-  (function next(i) {
-    if (i >= list.length) return render();
-    fetch('https://api.scryfall.com/cards/collection', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ identifiers: list.slice(i, i + 75).map(function (k) { return { name: names[k] }; }) })
-    }).then(function (r) { if (!r.ok) throw r.status; return r.json(); }).then(function (d) {
-      (d.data || []).forEach(function (c) {
-        var face = (c.card_faces && c.card_faces[0]) || c;
-        var card = { type: face.type_line || c.type_line || '', cost: face.mana_cost || c.mana_cost || '', cmc: c.cmc || 0 };
-        found[key(c.name)] = card;
-        if (face.name) found[key(face.name)] = card;
-      });
-      setTimeout(function () { next(i + 75); }, 100);
-    }).catch(function () { if (i) render(); }); // first request failed: nothing changes
-  })(0);
+  function ask(list, done) {
+    (function next(i) {
+      if (i >= list.length) return done();
+      fetch('https://api.scryfall.com/cards/collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ identifiers: list.slice(i, i + 75) })
+      }).then(function (r) { if (!r.ok) throw r.status; return r.json(); }).then(function (d) {
+        got = true;
+        (d.data || []).forEach(function (c) {
+          var face = (c.card_faces && c.card_faces[0]) || c;
+          var card = { type: face.type_line || c.type_line || '', cost: face.mana_cost || c.mana_cost || '', cmc: c.cmc || 0 };
+          found[key(c.name)] = card;
+          if (face.name) found[key(face.name)] = card;
+          if (c.set && c.collector_number) found[pkey(c.set, c.collector_number)] = card;
+        });
+        setTimeout(function () { next(i + 75); }, 100);
+      }).catch(function () { if (got) render(); }); // nothing answered yet: nothing changes
+    })(0);
+  }
+  ask(ids(true), function () { var rest = ids(false); rest.length ? ask(rest, render) : render(); });
 
   // {2}{W/U}{G/P} → mana font symbols, with the cost as text for screen readers
   function cost(text) {
@@ -75,7 +94,7 @@
   function render() {
     decks.forEach(function (deck) {
       deck.querySelectorAll('li[data-name]').forEach(function (li) {
-        var c = found[key(li.dataset.name)];
+        var c = lookup(li);
         if (c && c.cost) li.appendChild(cost(c.cost));
       });
       var main = deck.querySelector('[data-section="main"]');
@@ -83,7 +102,7 @@
       var ul = main.querySelector('ul');
       var groups = T.groups.map(function () { return []; }), curve = [0, 0, 0, 0, 0, 0, 0, 0];
       ul.querySelectorAll('li').forEach(function (li) {
-        var c = found[key(li.dataset.name)], t = c ? TYPES.filter(function (x) { return c.type.split(' — ')[0].indexOf(x) > -1; })[0] : null;
+        var c = lookup(li), t = c ? TYPES.filter(function (x) { return c.type.split(' — ')[0].indexOf(x) > -1; })[0] : null;
         var g = t ? ORDER.indexOf(t) : groups.length - 1;
         groups[g].push(li);
         if (c && t !== 'Land') curve[Math.min(7, Math.floor(c.cmc))] += +li.dataset.qty;

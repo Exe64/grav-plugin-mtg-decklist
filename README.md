@@ -40,17 +40,21 @@ Sideboard
 - Arena: `Deck`, `Sideboard`, `Commander` and `Companion` headers; the `About` block is left out.
   MTGO: the sideboard follows the first blank line, or lines starting with `SB:`. `4x` is accepted, and so are
   Moxfield's `*F*` and `*E*` markers (removed).
+- An export without headers (Moxfield's, for instance) names its commander as a parameter:
+  `[mtgdeck commander="Animar, Soul of Elements"]` moves that card from the main deck to the Commander section.
+- A double-faced card written `Front / Back` is read as `Front // Back`.
 - A line that is neither a card nor a header is left out. A `[mtgdeck]` block without any card line is left as is.
-- `(M10) 146` after a name points the tooltip to that printing. Arena's set code is passed as is: where it differs
-  from Scryfall's (`DAR` for Dominaria, for instance), the tooltip says the card is not found. Remove the set to
-  fall back to the card name.
+- `(M10) 146` after a name points the tooltip to that printing, and the grouping asks Scryfall for that printing:
+  flavor names (`Mechagodzilla, Battle Fortress`) are found that way. Arena's set code is passed as is: where it
+  differs from Scryfall's (`DAR` for Dominaria, for instance), the grouping asks again by name, but the tooltip says
+  the card is not found. Remove the set to fall back to the card name.
 - Without JavaScript the list is still there, as sections with their totals, each card a link to Scryfall.
   The same list ends up in blog summaries and in feeds.
 
 ## Network behaviour
 
-When a page with a deck opens, the reader's browser sends the card names of the page to Scryfall
-(`api.scryfall.com/cards/collection`, up to 75 names per request) to get their types and mana costs. Scryfall
+When a page with a deck opens, the reader's browser sends the cards of the page to Scryfall
+(`api.scryfall.com/cards/collection`, by printing when the export gives it, by name otherwise, up to 75 per request) to get their types and mana costs. Scryfall
 therefore sees the reader's IP address as soon as the page loads, not only on hover as with Scryfall Tooltip alone.
 Nothing is stored on the server, no cookie is set.
 

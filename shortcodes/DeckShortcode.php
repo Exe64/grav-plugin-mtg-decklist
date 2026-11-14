@@ -8,6 +8,7 @@ use Thunder\Shortcode\Shortcode\ShortcodeInterface;
  * [mtgdeck]…[/mtgdeck] around an Arena or MTGO export:
  *   Deck / Sideboard / Commander / Companion headers (Arena), or a blank line or "SB:" before the sideboard (MTGO);
  *   card lines "4 Lightning Bolt", "4x Lightning Bolt" or "4 Lightning Bolt (M10) 146".
+ * [mtgdeck commander="Name"] moves that card from the main deck to the Commander section (exports without headers).
  * Rendered as sections of cards with their totals, readable without JS. Each name is a [scryfall] link, with the set
  * and collector number when the export gives them. Lines that are not a card or a header are left out.
  */
@@ -26,6 +27,13 @@ class DeckShortcode extends Shortcode
             if (!$sections) {
                 return $sc->getContent();
             }
+            $commander = html_entity_decode(trim((string) $sc->getParameter('commander', '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            foreach ($commander !== '' ? $sections['main'] ?? [] : [] as $i => $c) {
+                if (strcasecmp($c[1], $commander) === 0 || strcasecmp(explode(' // ', $c[1])[0], $commander) === 0) {
+                    $sections['commander'][] = $c;
+                    unset($sections['main'][$i]);
+                }
+            }
             $e = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $card = $this->shortcode->getHandlers()->get('scryfall');
 
@@ -43,7 +51,9 @@ class DeckShortcode extends Shortcode
                     $params = $set ? ['set' => $set] + ($number ? ['number' => $number] : []) : [];
                     // Same markup as [scryfall] in an article; plain text when scryfall-tooltip is not there
                     $link = $card ? $card(new Sc('scryfall', $params, $name)) : $e($name);
-                    $items .= '<li data-name="' . $e($name) . '" data-qty="' . $qty . '"><span class="mtg-decklist-qty">' . $qty . '</span> ' . $link . '</li>';
+                    // data-set and data-number: the script asks Scryfall for that printing (flavor names like Godzilla's)
+                    $print = $set && $number ? ' data-set="' . $e($set) . '" data-number="' . $e($number) . '"' : '';
+                    $items .= '<li data-name="' . $e($name) . '" data-qty="' . $qty . '"' . $print . '><span class="mtg-decklist-qty">' . $qty . '</span> ' . $link . '</li>';
                     $lines[] = "$qty $name" . ($set ? " ($set)" . ($number ? " $number" : '') : '');
                 }
                 $export[] = $label . "\n" . implode("\n", $lines);
@@ -94,7 +104,8 @@ class DeckShortcode extends Shortcode
             if (preg_match('/^(.+?)\s+\(([A-Za-z0-9]{2,8})\)(?:\s+([\p{L}\p{N}★†-]{1,12}))?$/u', $name, $p)) {
                 [$name, $set, $number] = [$p[1], $p[2], $p[3] ?? '']; // as exported; [scryfall] lowercases the set
             }
-            $out[$m[1] !== '' ? 'sideboard' : $section][] = [(int) $m[2], trim($name), $set, $number];
+            $name = preg_replace('~\s+/\s+~', ' // ', trim($name)); // Moxfield's "Front / Back" → Scryfall's "Front // Back"
+            $out[$m[1] !== '' ? 'sideboard' : $section][] = [(int) $m[2], $name, $set, $number];
         }
 
         return $out;
