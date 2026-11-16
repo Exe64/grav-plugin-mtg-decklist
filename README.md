@@ -1,6 +1,6 @@
 # MTG Decklist
 
-(docs/mtg-decklist-for-grav.jpg)
+![MTG Decklist for Grav](docs/mtg-decklist-for-grav.jpg)
 
 [![CI](https://github.com/Exe64/grav-plugin-mtg-decklist/actions/workflows/ci.yml/badge.svg)](https://github.com/Exe64/grav-plugin-mtg-decklist/actions/workflows/ci.yml)
 
