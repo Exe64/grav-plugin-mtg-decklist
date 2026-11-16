@@ -34,6 +34,9 @@
     deck.insertBefore(b, deck.firstChild);
   });
 
+  // scryfall_lookup off in the plugin settings: no request to Scryfall, the server's sections stay as they are
+  if (decks[0].hasAttribute('data-no-lookup')) return;
+
   // Scryfall knows a split card by its first half ("Fire", not "Fire // Ice") and a double-faced one by its front face
   var key = function (name) { return name.split(' // ')[0].trim().toLowerCase(); };
   // A printing from the export (set and number) is asked as such: it finds flavor names ("Mechagodzilla, Battle Fortress")

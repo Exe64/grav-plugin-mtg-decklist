@@ -11,6 +11,7 @@ use Thunder\Shortcode\Shortcode\ShortcodeInterface;
  * [mtgdeck commander="Name"] moves that card from the main deck to the Commander section (exports without headers).
  * Rendered as sections of cards with their totals, readable without JS. Each name is a [scryfall] link, with the set
  * and collector number when the export gives them. Lines that are not a card or a header are left out.
+ * Headings in the page language (languages.yaml, as the script does by lang); the copied list keeps Arena's English ones.
  */
 class DeckShortcode extends Shortcode
 {
@@ -36,6 +37,9 @@ class DeckShortcode extends Shortcode
             }
             $e = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $card = $this->shortcode->getHandlers()->get('scryfall');
+            // Same language as the lang attribute themes print: the active one, else site.default_lang
+            $language = $this->grav['language'];
+            $lang = $language->getLanguage() ?: $this->config->get('site.default_lang', 'en');
 
             $html = '';
             $export = [];
@@ -57,7 +61,7 @@ class DeckShortcode extends Shortcode
                     $lines[] = "$qty $name" . ($set ? " ($set)" . ($number ? " $number" : '') : '');
                 }
                 $export[] = $label . "\n" . implode("\n", $lines);
-                $html .= '<section class="mtg-decklist-section" data-section="' . $key . '"><h3>' . $label
+                $html .= '<section class="mtg-decklist-section" data-section="' . $key . '"><h3>' . $e($language->translate('PLUGIN_MTG_DECKLIST.' . strtoupper($label), [$lang, 'en']))
                     . ' <span class="mtg-decklist-total">(' . $total . ')</span></h3><ul class="mtg-decklist-cards">' . $items . '</ul></section>';
             }
 
@@ -65,7 +69,9 @@ class DeckShortcode extends Shortcode
             $this->shortcode->addAssets('css', 'plugin://mtg-decklist/assets/mtg-decklist.css');
             $this->shortcode->addAssets('js', ['plugin://mtg-decklist/assets/mtg-decklist.js', ['group' => 'bottom', 'loading' => 'defer']]);
             // data-list: the list in Arena format, for the "Copy the list" button
-            return '<div class="mtg-decklist" data-list="' . $e(implode("\n\n", $export)) . '">' . $html . '</div>';
+            // scryfall_lookup off: the script makes no request, the list stays as rendered here
+            $offline = $this->config->get('plugins.mtg-decklist.scryfall_lookup', true) ? '' : ' data-no-lookup';
+            return '<div class="mtg-decklist"' . $offline . ' data-list="' . $e(implode("\n\n", $export)) . '">' . $html . '</div>';
         });
     }
 

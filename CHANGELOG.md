@@ -1,3 +1,13 @@
+# v1.2.0
+## 2026-11-16
+
+1. [](#new)
+    * `scryfall_lookup` setting: off, no request to Scryfall on page load (sites with strict privacy rules)
+1. [](#improved)
+    * Commander, Companion, Deck and Sideboard headings translated (`languages.yaml`, English and French): a French page no longer mixes both
+1. [](#bugfix)
+    * `docs/` left out of the GPM zip (`.gitattributes` named `/doc`)
+
 # v1.1.0
 ## 2026-11-14
 

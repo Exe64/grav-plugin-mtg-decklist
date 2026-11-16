@@ -19,7 +19,15 @@ bin/gpm install mtg-decklist
 ```
 
 Manual install: copy this repository to `user/plugins/mtg-decklist`, and install the two plugins above.
-There is no setting besides `enabled`.
+
+## Settings
+
+`user/config/plugins/mtg-decklist.yaml`, or the plugin page in the admin:
+
+```yaml
+enabled: true
+scryfall_lookup: true   # false: no request to Scryfall on page load, see Network behaviour
+```
 
 ## Usage
 
@@ -58,6 +66,10 @@ When a page with a deck opens, the reader's browser sends the cards of the page 
 therefore sees the reader's IP address as soon as the page loads, not only on hover as with Scryfall Tooltip alone.
 Nothing is stored on the server, no cookie is set.
 
+With `scryfall_lookup: false`, the script sends nothing: the list stays as the server rendered it (sections with
+their totals, no grouping by type, no mana costs, no curve), with the "Copy the list" button. Scryfall Tooltip still
+asks for the card image on hover.
+
 If Scryfall does not answer, the list stays as the server rendered it. Names must be in English for the grouping:
 a card Scryfall does not recognise (a French name, for instance) goes to "Other". Mana symbols come with the
 plugin: no request goes to Scryfall's symbol images.
@@ -68,7 +80,9 @@ plugin: no request goes to Scryfall's symbol images.
   artifacts, enchantments, lands, other. Commander and sideboard keep their order.
 - Mana curve of the main deck, lands left out, 0 to 7+.
 - "Copy the list" copies the deck in Arena format (needs HTTPS, as the clipboard does).
-- Interface text in French when the page is `lang="fr"`, English otherwise. Colours and fonts come from the theme.
+- Interface text in French when the page is `lang="fr"`, English otherwise: the section headings from
+  `languages.yaml` (the page language, else `site.default_lang`), the rest from the script. The copied list keeps
+  Arena's English headers. Colours and fonts come from the theme.
 
 ## Licences
 

@@ -18,7 +18,7 @@ for p in shortcode-core scryfall-tooltip feed; do
   for i in 1 2 3; do php bin/gpm install -y "$p" >/dev/null; [[ -d user/plugins/$p ]] && break; sleep 5; done
   [[ -d user/plugins/$p ]] || { echo "$p not installed"; exit 1; }
 done
-mkdir user/plugins/mtg-decklist && cp -r "$REPO"/{mtg-decklist.php,mtg-decklist.yaml,blueprints.yaml,assets,shortcodes} user/plugins/mtg-decklist/
+mkdir user/plugins/mtg-decklist && cp -r "$REPO"/{mtg-decklist.php,mtg-decklist.yaml,blueprints.yaml,languages.yaml,assets,shortcodes} user/plugins/mtg-decklist/
 rm -rf user/pages/* && cp -r "$REPO"/test/pages/. user/pages/
 printf 'title: Test\ndefault_lang: fr\n' > user/config/site.yaml
 mkdir -p user/config/plugins && printf 'enabled: true\nenable_json_feed: true\n' > user/config/plugins/feed.yaml
@@ -38,7 +38,7 @@ count() { grep -oF -- "$1" "$W/page.html" | wc -l; }
 echo "== markup"
 get /home >/dev/null
 has '<section class="mtg-decklist-section" data-section="main"><h3>Deck <span class="mtg-decklist-total">(40)</span></h3>' && ok "Arena: main deck and its total" || ko "main section: $(grep -o '<section[^>]*data-section="main"><h3>[^/]*' "$W/page.html")"
-has 'data-section="sideboard"><h3>Sideboard <span class="mtg-decklist-total">(3)</span>' && ok "Arena: sideboard and its total" || ko "sideboard section"
+has 'data-section="sideboard"><h3>Réserve <span class="mtg-decklist-total">(3)</span>' && ok "Arena: sideboard, heading in French and its total" || ko "sideboard section"
 [[ $(count '<li data-name=') == 10 ]] && ok "10 card lines, About block left out" || ko "card lines: $(count '<li data-name=')"
 has '<li data-name="Lightning Bolt" data-qty="4" data-set="M10" data-number="146"><span class="mtg-decklist-qty">4</span> <a class="scryfall-card" href="https://scryfall.com/search?q=%21%22Lightning%20Bolt%22%20set%3Am10%20cn%3A146" data-card="Lightning Bolt" data-img="https://api.scryfall.com/cards/m10/146?format=image&amp;version=normal">Lightning Bolt</a></li>' && ok "card line: quantity and [scryfall] link with set and number" || ko "card line: $(grep -o '<li data-name="Lightning Bolt"[^/]*' "$W/page.html")"
 has 'data-card="Monastery Swiftspear" data-img="https://api.scryfall.com/cards/named?format=image&amp;version=normal&amp;fuzzy=Monastery%20Swiftspear"' && ok "card without set: image by name" || ko "name only"
@@ -52,7 +52,7 @@ get /home >/dev/null
 has 'mtg-decklist.js' && has 'scryfall-tooltip.js' && ok "assets on the cached page too" || ko "assets missing from cache"
 
 get /commander >/dev/null
-has 'data-section="commander"><h3>Commander <span class="mtg-decklist-total">(1)</span></h3><ul class="mtg-decklist-cards"><li data-name="Animar, Soul of Elements"' && ok "commander= moves that card to the Commander section" || ko "commander=: $(grep -o 'data-section="[a-z]*"><h3>[^/]*' "$W/page.html" | tr '\n' ' ')"
+has 'data-section="commander"><h3>Commandant <span class="mtg-decklist-total">(1)</span></h3><ul class="mtg-decklist-cards"><li data-name="Animar, Soul of Elements"' && ok "commander= moves that card to the Commander section" || ko "commander=: $(grep -o 'data-section="[a-z]*"><h3>[^/]*' "$W/page.html" | tr '\n' ' ')"
 has 'data-section="main"><h3>Deck <span class="mtg-decklist-total">(4)</span>' && ok "commander= : main deck without it" || ko "main deck with commander="
 has '<li data-name="Etali, Primal Conqueror // Etali, Primal Sickness" data-qty="1" data-set="MOM" data-number="298">' && ok "Front / Back written Front // Back, printing on the line" || ko "double-faced: $(grep -o '<li data-name="Etali[^>]*' "$W/page.html")"
 has '<li data-name="Forest" data-qty="1">' && ok "no printing data without set and number" || ko "Forest line"
@@ -60,7 +60,7 @@ hasz $'Commander\n1 Animar, Soul of Elements (CMD) 181\n\nDeck\n1 Etali' && ok "
 
 get /mtgo >/dev/null
 has 'data-section="main"><h3>Deck <span class="mtg-decklist-total">(9)</span>' && ok "MTGO: main deck, 4x accepted" || ko "MTGO main: $(grep -o 'data-section="main"><h3>[^/]*' "$W/page.html")"
-has 'data-section="sideboard"><h3>Sideboard <span class="mtg-decklist-total">(3)</span>' && ok "MTGO: sideboard after the blank line, plus the SB: line" || ko "MTGO sideboard"
+has 'data-section="sideboard"><h3>Réserve <span class="mtg-decklist-total">(3)</span>' && ok "MTGO: sideboard after the blank line, plus the SB: line" || ko "MTGO sideboard"
 has "data-name=\"Kongming, &quot;Sleeping Dragon&quot;\"" && has 'data-name="Æther Vial"' && ok "quotes escaped, entity decoded once" || ko "escaping: $(grep -o 'data-name="[^"]*' "$W/page.html" | head -5 | tr '\n' ' ')"
 has 'onerror' && ko "HTML in a card line kept" || ok "HTML in a card line removed"
 has 'Not a deck at all.' && [[ $(count 'class="mtg-decklist"') == 1 ]] && ok "[mtgdeck] without a card line: content left as is" || ko "empty deck"
@@ -77,6 +77,12 @@ for f in rss atom json; do
   [[ $code == 200 && $valid == 0 ]] && has 'Lightning Bolt' && has 'Text after the deck' && ok "$f feed: valid, deck and text kept" || ko "$f feed: $code, valid=$valid"
 done
 for f in mtg-decklist.js mtg-decklist.css mana.css fonts/mana.woff2; do code=$(curl -s -o /dev/null -w '%{http_code}' "$B/user/plugins/mtg-decklist/assets/$f"); [[ $code == 200 ]] || ko "asset $f $code"; done; ok "plugin assets served"
+printf 'scryfall_lookup: false\n' > user/config/plugins/mtg-decklist.yaml; php bin/grav clearcache >/dev/null
+get /home >/dev/null
+has 'class="mtg-decklist" data-no-lookup' && ok "scryfall_lookup: false marks the deck for the script" || ko "scryfall_lookup: false"
+rm user/config/plugins/mtg-decklist.yaml; php bin/grav clearcache >/dev/null
+get /home >/dev/null
+has 'data-no-lookup' && ko "data-no-lookup left after the setting is back" || ok "lookup on by default"
 grep -qiE 'fatal|exception' "$W/php.log" && ko "PHP errors: $(grep -iE 'fatal|exception' "$W/php.log" | head -2)" || ok "no PHP error in the log"
 
 echo "== browser"

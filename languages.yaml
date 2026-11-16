@@ -1,0 +1,12 @@
+en:
+  PLUGIN_MTG_DECKLIST:
+    COMMANDER: Commander
+    COMPANION: Companion
+    DECK: Deck
+    SIDEBOARD: Sideboard
+fr:
+  PLUGIN_MTG_DECKLIST:
+    COMMANDER: Commandant
+    COMPANION: Compagnon
+    DECK: Deck
+    SIDEBOARD: Réserve
